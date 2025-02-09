@@ -7,6 +7,11 @@ from dotenv import load_dotenv
 # Load from .env
 load_dotenv()
 
+from database import Database
+
+# Initialize the database
+db = Database(getenv("DB_NAME"))
+
 client = discord.Client()
 
 # Initialize the bot's activity status
@@ -66,6 +71,10 @@ async def on_message(message):
             emote = "<:priderat:981564427801358416> "
         else:  # No special occasion, send the regular rat
             emote = ":rat: "  # This is a base emoji so we don't need the ID
+        
+        # insert rat count into database
+        db.upsert_rat_count(message.author.id, message.guild.id, rat_num)
+
         await message.channel.send(emote * rat_num)
 
     # Magic 8 Ball function
@@ -85,5 +94,31 @@ async def on_message(message):
                 mention_author=True,
                 reference=message
             )
+    
+    # Rat count function
+    if message.content.startswith("!ratcount"):
+        # split the message into words
+        words = message.content.split()
+        # if the message is just !ratcount, get the total rat count
+        if len(words) == 1:
+            rat_count = db.get_aggregate_rat_count()
+            await message.channel.send(f"There are {rat_count} total rats.", mention_author=True, reference=message)
+        
+        # if the message is !ratcount @user, get the rat count for that user
+        elif len(words) == 2:
+            user_id = words[1].replace("<", "").replace(">", "").replace("@", "").replace("!", "")
+            rat_count = db.get_rat_count_for_user(user_id, message.guild.id)
+            await message.channel.send(f"That user has {rat_count} rats in this server.", mention_author=True, reference=message)
+        
+        # if the message is !ratcount server, get the total rat count for the server
+        elif len(words) == 2 and words[1] == "server":
+            rat_count = db.get_aggregate_rat_count_by_server(message.guild.id)
+            await message.channel.send(f"There are {rat_count} total rats in this server.", mention_author=True, reference=message)
+        
+        else:
+            await message.channel.send("Invalid command. Usage: !ratcount, !ratcount @user, or !ratcount server", mention_author=True, reference=message)
+        
+        #rat_count = db.get_rat_count_for_user(message.author.id, message.guild.id)
+        #await message.channel.send(f"You have {rat_count} rats in this server.", mention_author=True, reference=message)
 
 client.run(getenv("TOKEN"))

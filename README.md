@@ -7,6 +7,11 @@ Includes words that contain **rat** and **r a t**!
 ## Commands
 - **!oracle** - 8-ball command
   - Usage: `!oracle <whatever here>`
+- **!ratcount** - Rat count command. Gets the total count
+  - Usage:
+    - `!ratcount` to get the total rat count.
+    - `!ratcount <@user>` to get the user's total rats.
+    - `!ratcount server` to get the server's total rats.
 
 ## Requirements
 
